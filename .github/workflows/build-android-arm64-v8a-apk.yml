@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android arm64 APK
 
 on:
   workflow_dispatch:
@@ -22,8 +22,7 @@ jobs:
         with:
           flutter-version: "3.38.x"
 
-      # ✅ 关键：在正确位置生成 key.properties
-      - name: Create debug keystore
+      - name: Create temporary keystore
         run: |
           cd simple_live_app/android
 
@@ -48,13 +47,13 @@ jobs:
           cd simple_live_app
           flutter pub get
 
-      - name: Build APK
+      - name: Build arm64 release APK
         run: |
           cd simple_live_app
-          flutter build apk --debug
+          flutter build apk --release --split-per-abi
 
-      - name: Upload APK
+      - name: Upload arm64 APK
         uses: actions/upload-artifact@v4
         with:
-          name: apk
-          path: simple_live_app/build/app/outputs/flutter-apk/app-debug.apk
+          name: app-arm64-v8a-release
+          path: simple_live_app/build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
