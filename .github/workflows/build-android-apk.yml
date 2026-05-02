@@ -4,38 +4,57 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-android:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout dev branch
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: master
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: "17"
-          cache: gradle
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.38.x"
-          cache: true
 
-      - name: Restore packages
-        working-directory: simple_live_app
-        run: flutter pub get
+      # ✅ 关键：在正确位置生成 key.properties
+      - name: Create debug keystore
+        run: |
+          cd simple_live_app/android
 
-      - name: Build debug APK
-        working-directory: simple_live_app
-        run: flutter build apk --debug
+          keytool -genkeypair \
+            -v \
+            -keystore upload-keystore.jks \
+            -storepass android \
+            -keypass android \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -alias upload \
+            -dname "CN=Android,O=Android,C=US"
+
+          echo "storeFile=upload-keystore.jks" > key.properties
+          echo "storePassword=android" >> key.properties
+          echo "keyPassword=android" >> key.properties
+          echo "keyAlias=upload" >> key.properties
+
+      - name: Install dependencies
+        run: |
+          cd simple_live_app
+          flutter pub get
+
+      - name: Build APK
+        run: |
+          cd simple_live_app
+          flutter build apk --debug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: simple-live-debug-apk
+          name: apk
           path: simple_live_app/build/app/outputs/flutter-apk/app-debug.apk
