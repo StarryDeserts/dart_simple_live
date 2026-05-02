@@ -28,7 +28,7 @@ jobs:
 
           keytool -genkeypair \
             -v \
-            -keystore upload-keystore.jks \
+            -keystore app/upload-keystore.jks \
             -storepass android \
             -keypass android \
             -keyalg RSA \
